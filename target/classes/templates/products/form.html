@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product.id == null ? 'CREATE PRODUCT' : 'EDIT PRODUCT'}"></title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff9f;
+            --dark-bg: #0a0a20;
+        }
+        /* CRT and Glitch Effects */
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at center, rgba(10, 10, 32, 0) 0%, rgba(10, 10, 32, 0.8) 80%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            z-index: -1;
+        }
+        
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 999;
+            animation: flicker 0.15s infinite;
+        }
+        
+        /* Digital Glitch Effect */
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+        
+        /* Random scan line */
+        .random-scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: rgba(0, 243, 255, 0.5);
+            opacity: 0;
+            z-index: 998;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            animation: randomScan 8s linear infinite;
+        }
+        
+        @keyframes randomScan {
+            0% { top: -10px; opacity: 0; }
+            10% { opacity: 0.8; }
+            20% { top: 20%; opacity: 0; }
+            50% { top: 50%; opacity: 0.8; }
+            70% { top: 70%; opacity: 0; }
+            90% { top: 90%; opacity: 0.8; }
+            100% { top: 100%; opacity: 0; }
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.97; }
+            15% { opacity: 0.94; }
+            20% { opacity: 0.98; }
+            25% { opacity: 0.95; }
+            30% { opacity: 0.97; }
+            35% { opacity: 0.96; }
+            40% { opacity: 0.97; }
+            45% { opacity: 0.94; }
+            50% { opacity: 0.98; }
+            55% { opacity: 0.95; }
+            60% { opacity: 0.97; }
+            65% { opacity: 0.95; }
+            70% { opacity: 0.96; }
+            75% { opacity: 0.94; }
+            80% { opacity: 0.98; }
+            85% { opacity: 0.96; }
+            90% { opacity: 0.97; }
+            95% { opacity: 0.95; }
+            100% { opacity: 0.98; }
+        }
+        
+        .form-title {
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+            animation: textGlow 2s infinite alternate;
+        }
+        
+        @keyframes textGlow {
+            from { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue); }
+            to { text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue); }
+        }
+        
+        .form-title::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-blue), transparent);
+            animation: scanline 2s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateX(-100%); opacity: 0; }
+            10% { transform: translateX(-80%); opacity: 0.8; }
+            80% { transform: translateX(80%); opacity: 0.8; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .cyber-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--neon-blue);
+            padding-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cyber-header::before {
+            content: '< ';
+            color: var(--neon-green);
+            animation: blink 1.5s infinite;
+        }
+        
+        .cyber-header::after {
+            content: ' />';
+            color: var(--neon-green);
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .cyber-form {
+            position: relative;
+            background: rgba(10, 10, 32, 0.7);
+            padding: 25px;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            clip-path: polygon(
+                0 10px, 
+                10px 0, 
+                calc(100% - 10px) 0, 
+                100% 10px, 
+                100% calc(100% - 10px), 
+                calc(100% - 10px) 100%, 
+                10px 100%, 
+                0 calc(100% - 10px)
+            );
+            animation: formGlow 4s infinite alternate;
+        }
+        
+        @keyframes formGlow {
+            0% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.4), inset 0 0 20px rgba(0, 243, 255, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(0, 243, 255, 0.6), inset 0 0 25px rgba(0, 243, 255, 0.3); }
+            100% { box-shadow: 0 0 30px rgba(0, 243, 255, 0.5), inset 0 0 20px rgba(0, 243, 255, 0.2); }
+        }
+        
+        .cyber-form::before {
+            content: '{';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-pink);
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            animation: pulse 2s infinite alternate;
+        }
+        
+        .cyber-form::after {
+            content: '}';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-pink);
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            animation: pulse 2s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            border-left: 2px solid var(--neon-green);
+            padding-left: 15px;
+        }
+        
+        .form-group::before {
+            content: '>';
+            position: absolute;
+            left: -15px;
+            color: var(--neon-green);
+            animation: blink 1.5s infinite;
+        }
+        
+        /* Cyber input styles */
+        input, textarea {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            border: 1px solid var(--neon-blue) !important;
+            color: white !important;
+            padding: 12px !important;
+            font-family: 'Share Tech Mono', monospace !important;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none !important;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.6) !important;
+            border-color: var(--neon-blue) !important;
+            background-color: rgba(0, 243, 255, 0.05) !important;
+        }
+        
+        /* Button enhancements */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 10px 5px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Share Tech Mono', monospace;
+            box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 159, 0.2), transparent);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+        
+        .btn:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-delete {
+            color: var(--neon-pink);
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+        
+        .btn-delete:hover {
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+            /* Terminal typing effect */
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid var(--neon-green);
+            animation: 
+                typing 3.5s steps(40, end),
+                blink-caret 0.75s step-end infinite;
+            display: inline-block;
+            max-width: 100%;
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--neon-green) }
+        }
+        
+        /* Label enhancements */
+        label {
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="random-scanline"></div>
+    
+    <div class="cyber-header">
+        <h1 class="form-title" th:text="${product.id == null ? 'CREATE NEW PRODUCT' : 'EDIT PRODUCT DATA'}"></h1>
+    </div>
+    
+    <div class="form-container">
+        <form th:action="@{${product.id == null ? '/products' : '/products/update/' + product.id}}" 
+              th:object="${product}" method="post" class="cyber-form">
+            
+            <div class="form-group" style="animation: glitch 0.5s ease-in-out 1s 1;">
+                <label for="name">NAME:</label>
+                <input type="text" id="name" th:field="*{name}" required placeholder="Enter product name...">
+            </div>
+            
+            <div class="form-group" style="animation: glitch 0.5s ease-in-out 1.5s 1;">
+                <label for="description">DESCRIPTION:</label>
+                <textarea id="description" th:field="*{description}" rows="4" placeholder="Enter product description..."></textarea>
+            </div>
+            
+            <div class="form-group" style="animation: glitch 0.5s ease-in-out 2s 1;">
+                <label for="price">PRICE:</label>
+                <input type="number" id="price" th:field="*{price}" step="0.01" required placeholder="0.00">
+            </div>
+            
+            <div>
+                <button type="submit" class="btn">[ SAVE DATA ]</button>
+                <a th:href="@{/products}" class="btn btn-delete">[ CANCEL ]</a>
+            </div>
+        </form>
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <a href="/products" class="btn">[ RETURN TO DATABASE ]</a>
+    </div>
+    
+    <script>
+        // Add terminal typing effect to labels
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add glitch effect randomly to elements
+            setInterval(function() {
+                const elements = document.querySelectorAll('.form-group, .btn, .form-title');
+                const randomElement = elements[Math.floor(Math.random() * elements.length)];
+                randomElement.style.animation = 'glitch 0.2s ease-in-out';
+                
+                setTimeout(function() {
+                    randomElement.style.animation = '';
+                }, 200);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
